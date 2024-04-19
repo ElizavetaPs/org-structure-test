@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useMount } from '@/utils/useMount';
-import { CreateUserForm } from './CreateUserForm/CreateUserForm';
+import { CreateUserForm } from '@/components/CreateUserForm/CreateUserForm';
 import { Popup } from '@/components/Popup/Popup';
-import { UsersTree } from './UsersTree/UsersTree';
-import { UsersList } from './UsersList/UsersList';
+import { Backdrop } from '@/components/Backdrop/Backdrop';
+import { UsersTree } from '@/components/UsersTree/UsersTree';
+import { UsersList } from '@/components/UsersList/UsersList';
 import styles from './Main.module.scss';
 
 
@@ -14,7 +15,7 @@ const generateRandomId = () => (
 	new Date().valueOf()
 );
 
-export const Main = () => {
+const Main = () => {
 	const isMount = useMount();
 	const [users, setUsers] = useState([]);
 	const [tree, setTree] = useState([]);
@@ -166,6 +167,9 @@ export const Main = () => {
 				<button className="button" onClick={openForm}>Добавить пользователя</button>
 			</div>
 			{
+				(isFormOpen || isPopup) && <Backdrop />
+			}
+			{
 				isFormOpen && (
 					<Popup onClose={closeForm}>
 						<CreateUserForm
@@ -204,3 +208,5 @@ export const Main = () => {
 		</div>
 	);
 }
+
+export default Main;
