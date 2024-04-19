@@ -10,6 +10,8 @@ import { UsersTree } from '@/components/UsersTree/UsersTree';
 import { UsersList } from '@/components/UsersList/UsersList';
 import styles from './Main.module.scss';
 
+import usersData from '@/data.js';
+
 
 const generateRandomId = () => (
 	new Date().valueOf()
@@ -26,7 +28,7 @@ const Main = () => {
 	const [availableManagers, setAvailableManagers] = useState([]);
 
 	useEffect(() => {
-		axios.get('/data.json').then(({ data }) => setUsers(data.users));
+		setUsers(usersData);
 	}, []);
 
 	useEffect(() => {
