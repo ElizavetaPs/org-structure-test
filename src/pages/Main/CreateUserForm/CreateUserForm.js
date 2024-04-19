@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Manager } from '@/components/Manager/Manager';
-import styles from './Form.module.scss';
+import { UserAvatar } from '@/components/UserAvatar/UserAvatar';
+import styles from './CreateUserForm.module.scss';
 import { default as loaderIcon } from '@/assets/icons/loader.svg';
 
 
-export const Form = ({ createUser, manager, openPopup, selectManager, onSelect }) => {
+export const CreateUserForm = ({ manager, createUser, onSelect, openPopup }) => {
 	const [avatar, setAvatar] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [userData, setUserData] = useState({
@@ -56,7 +56,7 @@ export const Form = ({ createUser, manager, openPopup, selectManager, onSelect }
 								<img src={loaderIcon.src} />
 							</div>
 						) : (
-							<img src={avatar} />
+							<UserAvatar src={avatar} size={90} />
 						)
 					}
 				</button>
@@ -66,10 +66,28 @@ export const Form = ({ createUser, manager, openPopup, selectManager, onSelect }
 				</div>
 			</div>
 			{
-				!!manager && <Manager manager={manager} />
+				!!manager && (
+					<div className={styles.managerContainer}>
+						<div className={styles.manager}>
+							<UserAvatar src={manager.avatar} size={30} />
+							<span>
+								{manager.name}
+								&nbsp;
+								{manager.surname}
+							</span>
+						</div>
+						<button className={styles.textButton} type="button" onClick={() => onSelect(null)}>
+							Удалить
+						</button>
+					</div>
+				)
 			}
-			<button className={styles.textButton} type="button" onClick={onSelect}>Выбрать руководителя</button>
-			<button className="button" type="button" onClick={() => createUser(userData)}>Добавить пользователя</button>
+			<button className={styles.textButton} type="button" onClick={openPopup}>
+				Выбрать руководителя
+			</button>
+			<button className="button" type="button" onClick={() => createUser(userData)}>
+				Добавить пользователя
+			</button>
 		</form>
 	);
 }

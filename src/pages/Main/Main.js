@@ -3,16 +3,15 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useMount } from '@/utils/useMount';
-import { User } from '@/components/User/User';
-import { Form } from './Form/Form';
-import { Popup } from './Popup/Popup';
-import { Manager } from '@/components/Manager/Manager';
-import { Lines } from '@/components/Lines/Lines';
+import { CreateUserForm } from './CreateUserForm/CreateUserForm';
+import { Popup } from '@/components/Popup/Popup';
+import { UsersTree } from './UsersTree/UsersTree';
+import { UsersList } from './UsersList/UsersList';
 import styles from './Main.module.scss';
 
 
-const getRandomId = (min, max) => (
-	Math.floor(Math.random() * (max - min) + min)
+const generateRandomId = () => (
+	new Date().valueOf()
 );
 
 export const Main = () => {
@@ -20,7 +19,7 @@ export const Main = () => {
 	const [users, setUsers] = useState([]);
 	const [tree, setTree] = useState([]);
 	const [isPopup, setPopup] = useState(false);
-	const [isFormPopup, setIsFormPopup] = useState(false);
+	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [focusedUser, setFocusedUser] = useState(null);
 	const [selectedManager, setSelectedManager] = useState(null);
 	const [availableManagers, setAvailableManagers] = useState([]);
@@ -39,15 +38,19 @@ export const Main = () => {
 		}
 	}, [selectedManager]);
 
+	const getUser = (id) => {
+		return users.find((u) => u.id === id);
+	}
+
 	const createUser = (newUser) => {
-		newUser.id = getRandomId(10, 1000000);
+		newUser.id = generateRandomId();
 		newUser.managerId = selectedManager?.id ?? null;
 		setUsers(users => [...users, newUser]);
-		closeFormPopup();
+		closeForm();
 		setSelectedManager(null);
 	}
 
-	const appointAsManager = () => {
+	const setAsHead = () => {
 		const updatedUsers = users.map((user) => {
 			if (user.id === focusedUser.id) {
 				return { ...user, managerId: null }
@@ -82,39 +85,13 @@ export const Main = () => {
 	}
 
 	const generateTree = (users) => {
-		const tree = (items, id = null, link = 'managerId') =>
+		const tree = (items, id = null, link = 'managerId') => (
 			items
 				.filter(item => item[link] === id)
-				.map(item => ({ ...item, children: tree(items, item.id) }));
+				.map(item => ({ ...item, children: tree(items, item.id) }))
+		);
 
 		setTree(tree(users));
-	}
-
-	const renderTree = (tree) => {
-		if (!tree.length) return;
-
-		return (
-			<ul className={styles.list}>
-				{tree.map((node) => {
-					const { managerId } = node;
-					const manager = users.find((u) => u.id === managerId);
-					return (
-						<li className={styles.item} key={node.id}>
-							<User
-								user={node}
-								manager={manager}
-								isFocused={focusedUser?.id === node.id}
-								onFocus={focusUser}
-								onDelete={deleteUser}
-								openPopup={openPopup}
-								onAppointAsManager={appointAsManager}
-							/>
-							{renderTree(node.children)}
-						</li>
-					);
-				})}
-			</ul>
-		);
 	}
 
 	const update = (users) => {
@@ -170,38 +147,32 @@ export const Main = () => {
 		setPopup(true);
 	}
 
-	const selectManagerHandler = () => {
-		setSelectedManager(null);
-		setFocusedUser(null);
-		openPopup();
-	}
-
 	const closePopup = () => {
 		setPopup(false);
 	}
 
-	const openFormPopup = () => {
-		setIsFormPopup(true);
+	const openForm = () => {
+		setFocusedUser(null);
+		setIsFormOpen(true);
 	}
 
-	const closeFormPopup = () => {
-		setIsFormPopup(false);
+	const closeForm = () => {
+		setIsFormOpen(false);
 	}
 
 	return (
 		<div className={styles.wrapper}>
 			<div className={styles.header}>
-				<button className="button" onClick={openFormPopup}>Добавить пользователя</button>
+				<button className="button" onClick={openForm}>Добавить пользователя</button>
 			</div>
 			{
-				isFormPopup && (
-					<Popup onClose={closeFormPopup}>
-						<Form
+				isFormOpen && (
+					<Popup onClose={closeForm}>
+						<CreateUserForm
 							manager={selectedManager}
-							selectManager={selectManager}
-							createUser={createUser}
+							onSelect={selectManager}
 							openPopup={openPopup}
-							onSelect={selectManagerHandler}
+							createUser={createUser}
 						/>
 					</Popup>
 				)
@@ -211,11 +182,7 @@ export const Main = () => {
 					<Popup onClose={closePopup}>
 						{
 							!!availableManagers.length ? (
-								availableManagers.map((manager) => (
-									<button onClick={() => selectManager(manager)} key={`manager-${manager.id}`}>
-										<Manager manager={manager} />
-									</button>
-								))
+								<UsersList users={availableManagers} onSelect={selectManager} />
 							) : (
 								<div>Нет доступных менеджеров</div>
 							)
@@ -223,8 +190,17 @@ export const Main = () => {
 					</Popup>
 				)
 			}
-			<div className={styles.area}>{renderTree(tree)}</div>
-			{/* <Lines /> */}
+			<div className={styles.tree}>
+				<UsersTree
+					tree={tree}
+					getUser={getUser}
+					onDelete={deleteUser}
+					onFocus={focusUser}
+					setAsHead={setAsHead}
+					openPopup={openPopup}
+					focusedUser={focusedUser}
+				/>
+			</div>
 		</div>
 	);
 }
